@@ -1,0 +1,42 @@
+# wyrm node daemon. NOT YET TESTED under systemd: review before relying on it.
+#
+# Enroll once by hand first (the unit starts the already-enrolled node):
+#   sudo wyrm up --coord https://HOST:8443 --pin sha256:... --authkey-file /root/wyrm.key
+# then stop it with Ctrl-C, delete the key file and enable this unit.
+[Unit]
+Description=wyrm mesh VPN node
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+ExecStart=/usr/local/bin/wyrm up
+Restart=on-failure
+RestartSec=2
+StateDirectory=wyrm
+StateDirectoryMode=0700
+RuntimeDirectory=wyrm
+
+# The daemon needs CAP_NET_ADMIN (tunnel device, addresses) and nothing else.
+# Add CAP_CHOWN if you use --group.
+CapabilityBoundingSet=CAP_NET_ADMIN
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+DevicePolicy=closed
+DeviceAllow=/dev/net/tun rw
+ProtectKernelTunables=yes
+ProtectControlGroups=yes
+ProtectClock=yes
+ProtectHostname=yes
+RestrictAddressFamilies=AF_INET AF_INET6 AF_NETLINK AF_UNIX
+RestrictNamespaces=yes
+RestrictRealtime=yes
+RestrictSUIDSGID=yes
+LockPersonality=yes
+MemoryDenyWriteExecute=yes
+SystemCallArchitectures=native
+SystemCallFilter=@system-service
+
+[Install]
+WantedBy=multi-user.target

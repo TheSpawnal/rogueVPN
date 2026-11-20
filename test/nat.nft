@@ -1,0 +1,21 @@
+# Behaviour of a typical home router: source NAT towards the internet and
+# no unsolicited traffic inwards.
+table ip nat {
+	chain post {
+		type nat hook postrouting priority 100;
+		oifname "wan" masquerade
+	}
+}
+table ip filter {
+	chain input {
+		type filter hook input priority 0; policy drop;
+		ct state established,related accept
+		iifname "lan" accept
+		iifname "lo" accept
+	}
+	chain forward {
+		type filter hook forward priority 0; policy drop;
+		ct state established,related accept
+		iifname "lan" oifname "wan" accept
+	}
+}
